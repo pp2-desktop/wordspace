@@ -46,6 +46,7 @@ bool HelloWorld::init()
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
 
+
     /////////////////////////////
     // 3. add your codes below...
 
@@ -71,29 +72,37 @@ bool HelloWorld::init()
     //this->addChild(sprite, 0);
 
     
-    float width = 750;
-    int row = 3; // 2x2, 3x3, 4x4, 5x5;
+    int row = 4; // 2x2, 3x3, 4x4, 5x5;
     int col = row;
-    const float margin = 25.0f;
-    const float block_margin = 15.0f;
+    const float margin = 10.0f;
+    const float block_margin = 10.0f;
     const float default_block_size = 100.0f;
 
-    const float each_side_size = 350.0f;
+
+    float width = 750 - (margin * 2.0f);
+
+    //const float each_side_size = width / 2.0f;
 
     float side_block_cnt = row / 2;
 
     float block_size = 100.0f;
 
+
+    auto total_block_margin = ((row-1) * block_margin);
+    block_size = (width - total_block_margin) / row;
+    
+    /*
     if(row % 2 == 0) {
-      block_size = (each_side_size-side_block_cnt * block_margin) / ((side_block_cnt));
+      //block_size = (each_side_size - side_block_cnt * block_margin) / ((side_block_cnt));
     } else {
-      block_size = (each_side_size-side_block_cnt * block_margin) / ((side_block_cnt + 0.5f));
+      //block_size = (each_side_size - side_block_cnt * block_margin) / ((side_block_cnt + 0.5f));
     }
+    */
 
     CCLOG("each side block cnt: %f", block_size);
 
 
-    auto last_y = 100.0f;
+    auto last_y = visibleSize.height/4.0f;
 
     for(auto i=0; i<col; i++) {
       auto last_x = margin;
