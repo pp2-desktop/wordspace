@@ -7,6 +7,12 @@
 USING_NS_CC;
 using namespace cocos2d::ui;
 
+struct block_info {
+  Vec2 pos;
+  Sprite* sprite;
+  PhysicsBody* physcis;
+};
+
 class HelloWorld : public cocos2d::Layer
 {
 public:
@@ -18,7 +24,27 @@ public:
     
     // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
-    
+   
+
+    block_info* blocks[5][5];
+    void update(float dt);
+
+    virtual bool onTouchBegan(Touch* touch, Event* unused_event);
+    virtual void onTouchMoved(Touch* touch, Event* unused_event);
+    virtual void onTouchCancelled(Touch* touch, Event* unused_event);
+    virtual void onTouchEnded(Touch* touch, Event *unused_event);
+
+    block_info* get_block_info_by_index(int index);
+    int get_row_by_index(int index);
+    int get_col_by_index(int index);
+    void replace_blocks(int row, int col);
+
+    int row_;
+    int col_;
+    std::vector<int> tags_;
+
+    bool is_touched;
+
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
 };
