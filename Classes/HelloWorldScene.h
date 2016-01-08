@@ -12,7 +12,7 @@ struct block_info {
   Sprite* sprite;
   PhysicsBody* physcis;
 };
-
+typedef block_info* block_info_ptr;
 class HelloWorld : public cocos2d::Layer
 {
 public:
@@ -25,8 +25,11 @@ public:
     // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
    
-    block_info** blocks;
-    //block_info* blocks[5][5];
+    //block_info* blocks[20][20];
+
+    block_info_ptr** blocks;
+    std::vector<block_info*> block_info_ptrs;
+
     void update(float dt);
 
     virtual bool onTouchBegan(Touch* touch, Event* unused_event);
@@ -51,6 +54,8 @@ public:
 
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
+
+    void clean_up();
 };
 
 #endif // __HELLOWORLD_SCENE_H__

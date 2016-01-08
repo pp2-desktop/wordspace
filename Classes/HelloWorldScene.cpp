@@ -1,6 +1,6 @@
 #include "HelloWorldScene.h"
 #include <ctime>
-
+#include <chrono>
 Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
@@ -15,6 +15,28 @@ Scene* HelloWorld::createScene()
 
     // return the scene
     return scene;
+}
+
+void HelloWorld::clean_up() {
+  
+  /*
+  for (auto i=0; i<block_info_ptrs.size(); i++ ) {
+    block_info_ptrs[i]->sprite = nullptr;
+    block_info_ptrs[i]->physcis = nullptr;
+    delete block_info_ptrs[i];
+  }
+  block_info_ptrs.clear(); 
+  */
+
+  CCLOG("clean 1"); 
+  
+  for(auto i=0; i<row_; i++) {
+    delete [] *(blocks+i);
+  }
+
+  CCLOG("clean 2"); 
+
+  delete [] blocks;
 }
 
 // on "init" you need to initialize your instance
@@ -64,6 +86,11 @@ bool HelloWorld::init()
           auto scaleTo2 = ScaleTo::create(0.2f, 1.0f);
           restart_button->runAction(scaleTo2);
 
+	  clean_up();
+
+	  auto _scene = HelloWorld::createScene();
+	  Director::getInstance()->replaceScene(TransitionFade::create(0.0f, _scene, Color3B(0,255,255)));
+
         } else if(type == ui::Widget::TouchEventType::CANCELED) {
           auto scaleTo2 = ScaleTo::create(0.2f, 1.0f);
           restart_button->runAction(scaleTo2);
@@ -98,11 +125,14 @@ bool HelloWorld::init()
 
     
     std::srand(std::time(0)); // use current time as seed for random generator
-    row_ = (std::rand() % 10) + 2; // 2x2, 3x3, 4x4, 5x5;
+    row_ = (std::rand() % 5) + 2; // 2x2, 3x3, 4x4, 5x5;
     CCLOG("row: %d", row_);
     col_ = row_;
 
-   
+    blocks = new block_info_ptr*[row_];
+    for(auto i=0; i<row_; i++) {
+      *(blocks+i) = new block_info_ptr[col_];
+    }
 
     const float margin = 10.0f;
     const float block_margin = 10.0f;
@@ -120,19 +150,21 @@ bool HelloWorld::init()
  
     //LOG("each side block cnt: %f", block_size);
 
-    auto last_y = visibleSize.height - 200.0f;
+    auto last_y = visibleSize.height - 300.0f;
     auto tag = 0;
-
+    CCLOG("--------------------------------------------------------------");
     for(auto i=0; i<col_; i++) {
       auto last_x = margin;
       for(auto j=0; j<row_; j++) {
 
         auto block_info_ptr = new block_info;
+	block_info_ptrs.push_back(block_info_ptr);
 
         auto x = last_x + block_size/2;
         last_x = x + block_margin + block_size/2;
 
         auto sprite = Sprite::create("block.png");
+
         sprite->setPosition(Vec2(x, last_y));
 
         float scale_factor = block_img_size - block_size;
@@ -144,38 +176,44 @@ bool HelloWorld::init()
           // 이미지보다 블럭이 더 큰 상황
           auto add_factor = std::abs(scale_factor) * 0.01f;
           scale_factor = 1.00 + add_factor; 
-          //sprite->setScale(scale_factor);
+          sprite->setScale(scale_factor);
           //CCLOG("scale_factor1: %f", scale_factor);
         } else {
           auto sub_factor = std::abs(scale_factor) * 0.01f;
           scale_factor = 1.00 - sub_factor; 
-          //sprite->setScale(scale_factor);
+          sprite->setScale(scale_factor);
           //CCLOG("scale_factor2: %f", scale_factor);
         }
 
-
+	CCLOG("x: %f, y: %f", sprite->getPosition().x, sprite->getPosition().y);
         // physics 
-        auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size+10.0f), PhysicsMaterial(0.0f, 0.5f, 0.5f));
+        auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size), PhysicsMaterial(0.0f, 0.5f, 0.5f));
 
-        physicsBody->setGravityEnable(true);
+        //physicsBody->setGravityEnable(true);
+	physicsBody->setDynamic(false);
         physicsBody->setRotationEnable(false);
         sprite->setPhysicsBody(physicsBody);
 
         sprite->setTag(tag++);
-
-        this->addChild(sprite, 0);
+	//sprite->retain();
+        this->addChild(sprite, 1);
 
         block_info_ptr->pos = sprite->getPosition();
         block_info_ptr->sprite = sprite;
         block_info_ptr->physcis = physicsBody;
 
         blocks[i][j] = block_info_ptr;
+
+	//std::chrono::milliseconds duration( 10 ); 
+	//std::this_thread::sleep_for( duration ); // Sleep for 2 seconds.
       }
 
       last_y = last_y - (block_size + block_margin);
     }
 
-    CCLOG("last y position: %f", last_y);
+
+    CCLOG("size: %d", block_info_ptrs.size());
+    //CLOG("last y position: %f", last_y);
 
     auto bottom = Sprite::create("bottom.png");
     bottom->setPosition(Vec2(visibleSize.width/2.0f, last_y - 10.0f));
@@ -332,6 +370,7 @@ int HelloWorld::get_col_by_index(int index) {
 void HelloWorld::replace_blocks(int row, int col) {
   
   if(row == 0) {
+    delete blocks[0][col];
     blocks[0][col] = nullptr;
     return;
   }  
