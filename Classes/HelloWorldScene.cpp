@@ -1,4 +1,5 @@
 #include "HelloWorldScene.h"
+#include <ctime>
 
 Scene* HelloWorld::createScene()
 {
@@ -47,6 +48,29 @@ bool HelloWorld::init()
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
 
+    
+    restart_button = ui::Button::create();
+    //restart_button->ignoreContentAdaptWithSize(false);
+    restart_button->setContentSize(Size(231, 94));
+    restart_button->loadTextures("restart.png", "restart.png");
+    restart_button->setPosition(Vec2(visibleSize.width / 2.0f, visibleSize.height - 100));
+
+    restart_button->addTouchEventListener([&](Ref* sender, Widget::TouchEventType type) {
+        if(type == ui::Widget::TouchEventType::BEGAN) {
+          auto scaleTo = ScaleTo::create(0.2f, 1.3f);
+          restart_button->runAction(scaleTo);
+
+        } else if(type == ui::Widget::TouchEventType::ENDED) {
+          auto scaleTo2 = ScaleTo::create(0.2f, 1.0f);
+          restart_button->runAction(scaleTo2);
+
+        } else if(type == ui::Widget::TouchEventType::CANCELED) {
+          auto scaleTo2 = ScaleTo::create(0.2f, 1.0f);
+          restart_button->runAction(scaleTo2);
+        }
+      });
+
+    this->addChild(restart_button, 0);
 
     /////////////////////////////
     // 3. add your codes below...
@@ -73,10 +97,15 @@ bool HelloWorld::init()
     //this->addChild(sprite, 0);
 
     
-    row_ = 5; // 2x2, 3x3, 4x4, 5x5;
+    std::srand(std::time(0)); // use current time as seed for random generator
+    row_ = (std::rand() % 10) + 2; // 2x2, 3x3, 4x4, 5x5;
+    CCLOG("row: %d", row_);
     col_ = row_;
+
+   
+
     const float margin = 10.0f;
-    const float block_margin = 5.0f;
+    const float block_margin = 10.0f;
     const float block_img_size = 100.0f;
 
 
@@ -115,18 +144,18 @@ bool HelloWorld::init()
           // 이미지보다 블럭이 더 큰 상황
           auto add_factor = std::abs(scale_factor) * 0.01f;
           scale_factor = 1.00 + add_factor; 
-          sprite->setScale(scale_factor);
-          CCLOG("scale_factor1: %f", scale_factor);
+          //sprite->setScale(scale_factor);
+          //CCLOG("scale_factor1: %f", scale_factor);
         } else {
           auto sub_factor = std::abs(scale_factor) * 0.01f;
           scale_factor = 1.00 - sub_factor; 
-          sprite->setScale(scale_factor);
-          CCLOG("scale_factor2: %f", scale_factor);
+          //sprite->setScale(scale_factor);
+          //CCLOG("scale_factor2: %f", scale_factor);
         }
 
 
         // physics 
-        auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size), PhysicsMaterial(0.0f, 0.5f, 0.5f));
+        auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size+10.0f), PhysicsMaterial(0.0f, 0.5f, 0.5f));
 
         physicsBody->setGravityEnable(true);
         physicsBody->setRotationEnable(false);
@@ -193,16 +222,35 @@ bool HelloWorld::onTouchBegan(Touch* touch, Event* unused_event) {
   }
 
   is_touched = true;
-  tags_.clear();
+  touched_blocks_.clear();
   
   return true; 
 }
  
 void HelloWorld::onTouchMoved(Touch* touch, Event* unused_event) {
-  CCLOG("touch moved");
 
   Point touchEnd = touch->getLocation();
 
+
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+
+      if(!is_touched_blocks(i, j)) {
+        auto block_ptr = blocks[i][j];
+        if(block_ptr != nullptr) {
+
+          Rect boundingBox = block_ptr->sprite->boundingBox();
+          //CCLOG("boundingbox width: %f", boundingBox.getMaxX() - boundingBox.getMinX());
+          if (boundingBox.containsPoint(touchEnd)) {
+            std::tuple<int, int> tmp = std::make_tuple(i, j);
+            touched_blocks_.push_back(tmp);
+          }
+        }
+      }
+    }
+  }
+
+  /*
   int tag_end = row_ * col_;
   for(auto i=0; i<tag_end; i++) {
 
@@ -218,6 +266,7 @@ void HelloWorld::onTouchMoved(Touch* touch, Event* unused_event) {
       }
     }
   }
+  */
 
 }
  
@@ -227,30 +276,26 @@ void HelloWorld::onTouchCancelled(Touch* touch, Event* unused_event) {
  
 void HelloWorld::onTouchEnded(Touch* touch, Event* unused_event) {
 
-  for(auto& tag : tags_) {
-    CCLOG("tag: %d", tag);
+  for(auto& tb : touched_blocks_) {
+    CCLOG("row: %d, col: %d", std::get<0>(tb), std::get<1>(tb));
   }
 
-  Point touchEnd = touch->getLocation();
+  CCLOG("--------------------------------------");
+  
+  for(auto& tb : touched_blocks_) {
 
-  for(auto i=0; i<row_; i++) {
-    for(auto j=0; j<col_; j++) {
+    auto i = std::get<0>(tb);
+    auto j = std::get<1>(tb);
 
-      auto block_ptr = blocks[i][j];
+    auto block_ptr = blocks[i][j];
 
-      if(block_ptr != nullptr) {
-        Rect boundingBox = block_ptr->sprite->boundingBox();
-        if (boundingBox.containsPoint(touchEnd)) {
-
-          replace_blocks(i, j);
-
-          this->removeChild(block_ptr->sprite, true);
-        }
-      }
+    if(block_ptr != nullptr) {
+      replace_blocks(i, j);
+      this->removeChild(block_ptr->sprite, true);
     }
   }
 
-  is_touched = true;
+  is_touched = false;
    //Rect boundingBox = getChildByTag(i)->boundingBox();
    //if (boundingBox.containsPoint(touchEnd))
 }
@@ -301,4 +346,15 @@ void HelloWorld::replace_blocks(int row, int col) {
       blocks[i][col] = nullptr;
     }
   }
+}
+
+bool HelloWorld::is_touched_blocks(int row, int col) {
+
+  for(auto& tb : touched_blocks_) {
+    if(std::get<0>(tb) == row && std::get<1>(tb) == col) {
+      return true;
+    }
+  }
+
+  return false;
 }

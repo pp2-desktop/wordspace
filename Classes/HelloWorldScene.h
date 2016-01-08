@@ -25,8 +25,8 @@ public:
     // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
    
-
-    block_info* blocks[5][5];
+    block_info** blocks;
+    //block_info* blocks[5][5];
     void update(float dt);
 
     virtual bool onTouchBegan(Touch* touch, Event* unused_event);
@@ -41,9 +41,13 @@ public:
 
     int row_;
     int col_;
-    std::vector<int> tags_;
+
+    std::vector<std::tuple<int, int>> touched_blocks_;
+    bool is_touched_blocks(int row, int col);
 
     bool is_touched;
+
+    Button* restart_button;
 
     // implement the "static create()" method manually
     CREATE_FUNC(HelloWorld);
