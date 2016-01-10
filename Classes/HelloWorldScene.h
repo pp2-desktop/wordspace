@@ -13,6 +13,7 @@ struct block_info {
   PhysicsBody* physcis;
 };
 typedef block_info* block_info_ptr;
+
 class HelloWorld : public cocos2d::Layer
 {
 public:
@@ -21,6 +22,12 @@ public:
 
     // Here's a difference. Method 'init' in cocos2d-x returns bool, instead of returning 'id' in cocos2d-iphone
     virtual bool init();
+    HelloWorld() {
+      CCLOG("ctor");
+    }
+    ~HelloWorld() {
+      CCLOG("dtor");
+    }
     
     // a selector callback
     void menuCloseCallback(cocos2d::Ref* pSender);
@@ -45,7 +52,8 @@ public:
     int row_;
     int col_;
 
-    std::vector<std::tuple<int, int>> touched_blocks_;
+    //std::vector<std::tuple<int, int>> touched_blocks_;
+    std::map<int, std::tuple<int, int>> touched_blocks_;
     bool is_touched_blocks(int row, int col);
 
     bool is_touched;
@@ -59,3 +67,4 @@ public:
 };
 
 #endif // __HELLOWORLD_SCENE_H__
+//http://stackoverflow.com/questions/32557414/how-do-you-load-a-scene-while-animating-a-sprite-in-cocos2d-x
