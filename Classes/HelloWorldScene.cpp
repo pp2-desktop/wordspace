@@ -130,7 +130,7 @@ bool HelloWorld::init()
 
     
     std::srand(std::time(0)); // use current time as seed for random generator
-    row_ = (std::rand() % 5) + 2; // 2x2, 3x3, 4x4, 5x5;
+    row_ = (std::rand() % 6) + 2; // 2x2, 3x3, 4x4, 5x5;
     CCLOG("row: %d", row_);
     col_ = row_;
 
@@ -140,7 +140,7 @@ bool HelloWorld::init()
     }
 
     const float margin = 10.0f;
-    const float block_margin = 10.0f;
+    const float block_margin = 0.0f;
     const float block_img_size = 100.0f;
 
 
@@ -168,7 +168,9 @@ bool HelloWorld::init()
         auto x = last_x + block_size/2;
         last_x = x + block_margin + block_size/2;
 
-        auto sprite = Sprite::create("block.png");
+        char key = get_rand_img_alphabet();
+        std::string img_path = "aaa/" + std::string(&key, 1) + std::string(".png");
+        auto sprite = Sprite::create(img_path);
 
         sprite->setPosition(Vec2(x, last_y));
 
@@ -181,14 +183,15 @@ bool HelloWorld::init()
           // 이미지보다 블럭이 더 큰 상황
           auto add_factor = std::abs(scale_factor) * 0.01f;
           scale_factor = 1.00 + add_factor; 
-
+          scale_factor *= 0.85;
 	  // 대각선 테스트 하기 위해서 주석처리
-          //sprite->setScale(scale_factor);
+          sprite->setScale(scale_factor);
         } else {
           auto sub_factor = std::abs(scale_factor) * 0.01f;
           scale_factor = 1.00 - sub_factor; 
+          scale_factor *= 0.85;
 	  // 대각선 테스트 하기 위해서 주석처리
-          //sprite->setScale(scale_factor);
+          sprite->setScale(scale_factor);
         }
 
 	CCLOG("x: %f, y: %f", sprite->getPosition().x, sprite->getPosition().y);
@@ -199,7 +202,7 @@ bool HelloWorld::init()
 	physicsBody->setDynamic(true);
         physicsBody->setRotationEnable(false);
         physicsBody->setVelocity(Vec2(0.0f, -400.0f));
-
+        //physicsBody->setMass(50000000.5f);
         sprite->setPhysicsBody(physicsBody);
 
         //sprite->setTag(tag++);
@@ -209,6 +212,7 @@ bool HelloWorld::init()
         block_info_ptr->pos = sprite->getPosition();
         block_info_ptr->sprite = sprite;
         block_info_ptr->physcis = physicsBody;
+        block_info_ptr->key = key;
 
         blocks[i][j] = block_info_ptr;
 
@@ -264,11 +268,12 @@ void HelloWorld::menuCloseCallback(Ref* pSender)
 bool HelloWorld::onTouchBegan(Touch* touch, Event* unused_event) {
   //CCLOG("touch begin");
   if(is_touched) {
-    return true;
+    return false;
   }
 
   is_touched = true;
   touched_blocks_.clear();
+  ordered_touched_blocks_.clear();
   
   return true; 
 }
@@ -282,20 +287,36 @@ void HelloWorld::onTouchMoved(Touch* touch, Event* unused_event) {
     for(auto j=0; j<col_; j++) {
 
       if(!is_touched_blocks(i, j)) {
+        /*
+        if(!check_proper_move(i, j)) {
+          return;
+        }
+        */
         auto block_ptr = blocks[i][j];
         if(block_ptr != nullptr) {
           Rect boundingBox = block_ptr->sprite->boundingBox();
+
+          Size size = boundingBox.size;
+          Size size2 = size * 0.65f;
+          auto moveX = (size.width - size2.width) * 0.5f; // 10
+          auto moveY = (size.height- size2.height) * 0.5f; // 10
+
+          Rect boundingBox2(boundingBox.getMinX() + moveX, boundingBox.getMinY() + moveY, size2.width, size2.height);
           
-          if (boundingBox.containsPoint(touchEnd)) {
-            std::tuple<int, int> tmp = std::make_tuple(i, j);
-	    auto index = (i*row_) + j;
-	    touched_blocks_[index] = tmp;
+          if (boundingBox2.containsPoint(touchEnd)) {
+
+            if(is_proper_place(i, j)) {
+              std::tuple<int, int> tmp = std::make_tuple(i, j);
+              auto index = (i*row_) + j;
+              touched_blocks_[index] = tmp;
+              ordered_touched_blocks_.push_back(tmp);
+              start_touched_action(i, j);
+            }
           }
         }
       }
     }
   }
-
 }
  
 void HelloWorld::onTouchCancelled(Touch* touch, Event* unused_event) {
@@ -394,4 +415,41 @@ bool HelloWorld::is_touched_blocks(int row, int col) {
   */
 
   return false;
+}
+
+void HelloWorld::start_touched_action(int row, int col) {
+  auto block = blocks[row][col];
+  auto tintBy = TintBy::create(1.0f, 255.0f, 196.0f, 0.0f);
+  block->sprite->runAction(tintBy);
+}
+
+bool HelloWorld::is_proper_place(int row, int col) {
+
+  if(ordered_touched_blocks_.empty()) {
+    return true;
+  }
+
+  std::tuple<int, int> touched_block = ordered_touched_blocks_.back();
+  if(std::abs(std::get<0>(touched_block) - row) > 1 || 
+     std::abs(std::get<1>(touched_block) - col) > 1) {
+    CCLOG("not proper place");
+    return false;
+  }
+
+  CCLOG("proper place");
+  return true;
+}
+
+char HelloWorld::get_rand_img_alphabet() {
+  CCLOG("rand_img_aphabet");
+
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    /* using nano-seconds instead of seconds */
+  std::srand((time_t)ts.tv_nsec);
+
+  //std::srand(std::time(0));
+  int r = (std::rand() % 26) + alphabet::a;
+  return static_cast<char>(r);
 }

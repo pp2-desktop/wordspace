@@ -11,8 +11,11 @@ struct block_info {
   Vec2 pos;
   Sprite* sprite;
   PhysicsBody* physcis;
+  char key;
 };
 typedef block_info* block_info_ptr;
+
+enum alphabet {a=97,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,end};
 
 class HelloWorld : public cocos2d::Layer
 {
@@ -54,9 +57,14 @@ public:
 
     //std::vector<std::tuple<int, int>> touched_blocks_;
     std::map<int, std::tuple<int, int>> touched_blocks_;
+    std::deque<std::tuple<int, int>> ordered_touched_blocks_;
     bool is_touched_blocks(int row, int col);
-
+    void start_touched_action(int row, int col);
+    bool is_proper_place(int row, int col);
     bool is_touched;
+    char get_rand_img_alphabet();
+
+   
 
     Button* restart_button;
 
