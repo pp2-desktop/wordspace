@@ -5,8 +5,8 @@ Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
     auto scene = Scene::createWithPhysics();
-    scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
-    
+    //scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
+    scene->getPhysicsWorld()->setGravity(Vec2(0,-2000.0f));
     // 'layer' is an autorelease object
     auto layer = HelloWorld::create();
 
@@ -131,6 +131,7 @@ bool HelloWorld::init()
     
     std::srand(std::time(0)); // use current time as seed for random generator
     row_ = (std::rand() % 6) + 2; // 2x2, 3x3, 4x4, 5x5;
+    //row_ = 7;
     CCLOG("row: %d", row_);
     col_ = row_;
 
@@ -196,14 +197,18 @@ bool HelloWorld::init()
 
 	CCLOG("x: %f, y: %f", sprite->getPosition().x, sprite->getPosition().y);
         // physics 
-        auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size), PhysicsMaterial(0.0f, 0.5f, 0.5f));
+        auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size), PhysicsMaterial(1.0f, 0.0f, 0.0f));
 
         physicsBody->setGravityEnable(true);
+        
 	physicsBody->setDynamic(true);
         physicsBody->setRotationEnable(false);
-        physicsBody->setVelocity(Vec2(0.0f, -400.0f));
-        //physicsBody->setMass(50000000.5f);
+        //physicsBody->setMass(1000.0f);
+        //physicsBody->setAngularDamping(0);
+        //physicsBody->setLinearDamping(0.0f);
+        //physicsBody->setVelocity(Vec2(0.0f, -400.0f));
         sprite->setPhysicsBody(physicsBody);
+        //physicsBody->applyImpulse(Vec2(0.0f, -800.0f));
 
         //sprite->setTag(tag++);
 	//sprite->retain();gxs
@@ -229,7 +234,7 @@ bool HelloWorld::init()
 
     auto bottom = Sprite::create("bottom.png");
     bottom->setPosition(Vec2(visibleSize.width/2.0f, 50.0f));
-    auto physicsBody2 = PhysicsBody::createBox(Size(bottom->getContentSize().width, bottom->getContentSize().height), PhysicsMaterial(0.0f, 0.5f, 0.5f));
+    auto physicsBody2 = PhysicsBody::createBox(Size(bottom->getContentSize().width, bottom->getContentSize().height), PhysicsMaterial(0.0f, 0.0f, 0.0f));
 
     physicsBody2->setDynamic(false);
     bottom->setPhysicsBody(physicsBody2);
@@ -247,7 +252,7 @@ bool HelloWorld::init()
     listener->onTouchEnded = CC_CALLBACK_2(HelloWorld::onTouchEnded, this);
  
     _eventDispatcher->addEventListenerWithSceneGraphPriority(listener, this);
-    
+    is_touched = false;
     return true;
 }
 
