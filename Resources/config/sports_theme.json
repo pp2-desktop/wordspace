@@ -1,0 +1,89 @@
+{
+  "levels": [
+ { 
+            "move": 15,
+            "row": 7,
+            "col": 7,
+            "words" : ["fitness", "skate", "bicycle", "catch", "tennis", "soccer", "net", "stick", "punch"],
+            "keys": ["e", "l", "t", "n", "s", "t", "e", "n", "i", "c", "i", "e", "s", "a", "n", "s", "t", "y", "f", "b", "k", "r", "e", "e", "c", "i", "s", "h", "t", "e", "n", "c", "c", "a", "c", "t", "c", "c", "c", "o", "u", "t", "i", "s", "k", "h", "n", "s", "p"]
+          },
+         { 
+            "move": 50,
+            "row": 3,
+            "col": 3,
+            "words" : ["bow", "gym", "bat"],
+            "keys": ["w", "m", "b", "a", "o", "y", "t", "b", "g"]
+          },
+          { 
+            "move": 5,
+            "row": 3,
+            "col": 3,
+            "words" : ["ski", "cue", "mat"],
+            "keys": ["i","a", "m", "e", "k", "c", "s", "u", "t"]
+          },
+          { 
+            "move": 5,
+            "row": 3,
+            "col": 3,
+            "words" : ["tag", "tie", "win"],
+            "keys": ["g","i", "w", "a", "e", "i", "n", "t", "t"]
+          },
+          { 
+            "move": 5,
+            "row": 3,
+            "col": 3,
+            "words" : ["run", "jog", "out"],
+            "keys": ["t","o", "r", "g", "u", "o", "n", "u", "j"]
+          },
+          { 
+            "move": 6,
+            "row": 4,
+            "col": 4,
+            "words" : ["swim", "bike", "rink", "puck"],
+            "keys": ["m", "i", "u", "k", "w", "n", "c", "p", "s", "k", "i", "r", "k", "e", "i", "b"]
+          },
+          { 
+            "move": 6,
+            "row": 4,
+            "col": 4,
+            "words" : ["jump", "home", "hoop", "team"],
+            "keys": ["e", "e", "m", "p", "t", "o", "m", "m", "h", "o", "o", "u", "h", "a", "j", "p"]
+          },
+          { 
+            "move": 6,
+            "row": 4,
+            "col": 4,
+            "words" : ["pole", "dive", "lutz", "play"],
+            "keys": ["z", "v", "e", "y", "i", "t", "a", "l", "d", "e", "u", "o", "p", "l", "l", "p"]
+          },
+          { 
+            "move": 8,
+            "row": 5,
+            "col": 5,
+            "words" : ["shoot", "skate", "pool", "archer", "pitch"],
+            "keys": ["e", "c", "h", "o", "o", "t", "t", "a", "h", "t", "i", "p", "c", "k", "s", "r", "h", "o", "r", "s", "e", "o", "p", "l", "a"]
+          },
+          { 
+            "move": 8,
+            "row": 5,
+            "col": 5,
+            "words" : ["golf", "race", "offense", "basketball"],
+            "keys": ["f", "a", "o", "c", "e", "l", "l", "b", "g", "a", "l", "t", "k", "s", "r", "f", "o", "e", "s", "a", "f", "e", "n", "b", "e"]
+          },
+          { 
+            "move": 11,
+            "row": 6,
+            "col": 6,
+            "words" : ["huddle", "hockey", "clup", "bunt", "coach", "inning", "field"],
+            "keys": ["g", "n", "d", "e", "u", "t", "i", "e", "l", "b", "i", "n", "l", "n", "n", "i", "c", "f", "y", "d", "d", "a", "o", "h", "u", "e", "k", "u", "o", "c", "p", "l", "c", "c", "h", "h"]
+          },
+          { 
+            "move": 15,
+            "row": 7,
+            "col": 7,
+            "words" : ["fitness", "skate", "bicycle", "catch", "tennis", "soccer", "net", "stick", "punch"],
+            "keys": ["e", "l", "t", "n", "s", "t", "e", "n", "i", "c", "i", "e", "s", "a", "n", "s", "t", "y", "f", "b", "k", "r", "e", "e", "c", "i", "s", "h", "t", "e", "n", "c", "c", "a", "c", "t", "c", "c", "c", "o", "u", "t", "i", "s", "k", "h", "n", "s", "p"]
+          }
+
+            ]
+}

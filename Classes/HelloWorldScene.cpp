@@ -1,12 +1,18 @@
 #include "HelloWorldScene.h"
 #include <ctime>
 #include <chrono>
+#include "GameInfo.h"
+#include "SimpleAudioEngine.h"
+#include <algorithm>
+
+using namespace CocosDenshion;
+
 Scene* HelloWorld::createScene()
 {
     // 'scene' is an autorelease object
     auto scene = Scene::createWithPhysics();
     //scene->getPhysicsWorld()->setDebugDrawMask(PhysicsWorld::DEBUGDRAW_ALL);
-    scene->getPhysicsWorld()->setGravity(Vec2(0,-2000.0f));
+    scene->getPhysicsWorld()->setGravity(Vec2(0,-1500.0f));
     // 'layer' is an autorelease object
     auto layer = HelloWorld::create();
 
@@ -76,10 +82,9 @@ bool HelloWorld::init()
 
     
     restart_button = ui::Button::create();
-    //restart_button->ignoreContentAdaptWithSize(false);
     restart_button->setContentSize(Size(231, 94));
     restart_button->loadTextures("restart.png", "restart.png");
-    restart_button->setPosition(Vec2(visibleSize.width / 2.0f, visibleSize.height - 100));
+    restart_button->setPosition(Vec2(visibleSize.width + 1500.0f, visibleSize.height - 100.0f));
 
     restart_button->addTouchEventListener([&](Ref* sender, Widget::TouchEventType type) {
         if(type == ui::Widget::TouchEventType::BEGAN) {
@@ -103,7 +108,7 @@ bool HelloWorld::init()
       });
 
     this->addChild(restart_button, 0);
-
+    
     /////////////////////////////
     // 3. add your codes below...
 
@@ -129,10 +134,16 @@ bool HelloWorld::init()
     //this->addChild(sprite, 0);
 
     
-    std::srand(std::time(0)); // use current time as seed for random generator
-    row_ = (std::rand() % 6) + 2; // 2x2, 3x3, 4x4, 5x5;
-    //row_ = 7;
-    CCLOG("row: %d", row_);
+    //std::srand(std::time(0)); // use current time as seed for random generator
+    //row_ = (std::rand() % 6) + 2; // 2x2, 3x3, 4x4, 5x5;
+
+    std::vector<level>& lvs = level_md::get().get_sports();
+
+    auto i = level_md::get().complete_sport_level;
+    move_ = lvs[i].move;
+    words_ = lvs[i].words;
+    //keys_ = lvs[i].keys;
+    row_ = lvs[i].row;
     col_ = row_;
 
     blocks = new block_info_ptr*[row_];
@@ -169,7 +180,9 @@ bool HelloWorld::init()
         auto x = last_x + block_size/2;
         last_x = x + block_margin + block_size/2;
 
-        char key = get_rand_img_alphabet();
+        //char key = get_rand_img_alphabet();
+        char key = get_img_alphabet(get_index(i,j));
+        CCLOG("%c", key);
         std::string img_path = "aaa/" + std::string(&key, 1) + std::string(".png");
         auto sprite = Sprite::create(img_path);
 
@@ -239,7 +252,14 @@ bool HelloWorld::init()
     physicsBody2->setDynamic(false);
     bottom->setPhysicsBody(physicsBody2);
 
-    this->addChild(bottom, 0 );
+    this->addChild(bottom, 0);
+
+
+    move_font = Label::createWithTTF(ccsf2("%d", move_) , "fonts/nanumb.ttf", 40);
+    move_font->setPosition(Vec2(visibleSize.width/2.0f, visibleSize.height - 100));
+    move_font->setColor( Color3B( 255, 255, 255) );
+    this->addChild(move_font, 0);
+
     
     this->scheduleUpdate();
 
@@ -271,11 +291,12 @@ void HelloWorld::menuCloseCallback(Ref* pSender)
 }
 
 bool HelloWorld::onTouchBegan(Touch* touch, Event* unused_event) {
-  //CCLOG("touch begin");
+  CCLOG("------------------------------------");
   if(is_touched) {
     return false;
   }
 
+  CCLOG("터치 시작");
   is_touched = true;
   touched_blocks_.clear();
   ordered_touched_blocks_.clear();
@@ -325,16 +346,70 @@ void HelloWorld::onTouchMoved(Touch* touch, Event* unused_event) {
 }
  
 void HelloWorld::onTouchCancelled(Touch* touch, Event* unused_event) {
-  CCLOG("touch canceled");
+  CCLOG("xxxxxxxxxxxxxxx CANCELD xxxxxxxxxxxxxxx");
 }
  
 void HelloWorld::onTouchEnded(Touch* touch, Event* unused_event) {
-  CCLOG("------------------------------------");
-  
+
+  if(ordered_touched_blocks_.size() <= 0) {
+    is_touched = false;
+    return;
+  }
+   
+  move_font->setString(ccsf2("%d", --move_));
+
+  std::string touched_word;
+  for(auto& it : ordered_touched_blocks_) {
+    auto i = std::get<0>(it);
+    auto j = std::get<1>(it);
+    auto block = blocks[i][j];
+    touched_word.push_back(block->key);
+  }
+
+  //CCLOG("%s", touched_word.c_str());
+
+  bool is_find = false;
+  auto index = 0;
+  for(auto& word : words_) {
+    if(touched_word == word) {
+      if(words_.size() > 1) {
+        auto audio = SimpleAudioEngine::getInstance();
+        audio->playEffect("sound/yeah.wav", false, 1.0f, 1.0f, 1.0f);
+      }
+      is_find = true;
+      complete_words_.push_back(touched_word);
+      break;
+    }
+    index++;
+  }
+
+
+  if(is_find) {
+    words_.erase(words_.begin()+index);
+  }
+  for(auto& word : words_) {
+    CCLOG("남은 단어들: %s", word.c_str());
+  }
+
+
+
+  if(!is_find) {
+    action_incorrect();
+    if(move_ < 1) {
+      clean_up();
+      auto audio = SimpleAudioEngine::getInstance();
+      audio->playEffect("sound/YouFailed.wav", false, 1.0f, 1.0f, 1.0f);
+      this->scheduleOnce(SEL_SCHEDULE(&HelloWorld::replace_level_scene), 0.0f);
+    } else {
+      is_touched = false;
+    }
+    return;
+  }
+
+    
   for(auto& it : touched_blocks_) {
 
     auto tmp = it.second;
-
     
     auto i = std::get<0>(tmp);
     auto j = std::get<1>(tmp);
@@ -349,7 +424,27 @@ void HelloWorld::onTouchEnded(Touch* touch, Event* unused_event) {
     
   }
 
-  is_touched = false;
+  if(check_complete_game()) {
+    auto audio = SimpleAudioEngine::getInstance();
+    audio->playEffect("sound/YouWin.wav", false, 1.0f, 1.0f, 1.0f);
+    level_md::get().complete_sport_level++;
+    this->scheduleOnce(SEL_SCHEDULE(&HelloWorld::replace_level_scene), 0.5f);
+    CCLOG("터치 종료");
+    return;
+  } 
+
+
+  if(check_end_game()) {
+    auto audio = SimpleAudioEngine::getInstance();
+    audio->playEffect("sound/YouFailed.wav", false, 1.0f, 1.0f, 1.0f);
+    Size visibleSize = Director::getInstance()->getVisibleSize();
+    restart_button->setPosition(Vec2(visibleSize.width - 150.0f, visibleSize.height - 100.0f));
+
+  }
+
+   is_touched = false;
+   CCLOG("터치 종료");
+  
 }
 
 block_info* HelloWorld::get_block_info_by_index(int index) {
@@ -371,14 +466,16 @@ int HelloWorld::get_row_by_index(int index) {
   if(index == 0) {
     return 0;
   }
-  return index / 5;
+  //return index / 5;
+  return index / row_;
 }
 
 int HelloWorld::get_col_by_index(int index) {
   if(index == 0) {
     return 0;
   }
-  return index % 5;
+  //return index % 5;
+  return index / col_;
 }
 
 void HelloWorld::replace_blocks(int row, int col) {
@@ -424,8 +521,16 @@ bool HelloWorld::is_touched_blocks(int row, int col) {
 
 void HelloWorld::start_touched_action(int row, int col) {
   auto block = blocks[row][col];
-  auto tintBy = TintBy::create(1.0f, 255.0f, 196.0f, 0.0f);
-  block->sprite->runAction(tintBy);
+  auto tintTo = TintTo::create(0.0f, 124.0f, 124.0f, 0.0f);
+  block->sprite->runAction(tintTo);
+}
+
+void HelloWorld::end_touched_action(int row, int col) {
+  auto block = blocks[row][col];
+  if(block != nullptr) {
+    auto tintTo = TintTo::create(0.0f, 255.0f, 255.0f, 255.0f);
+    block->sprite->runAction(tintTo);
+  }
 }
 
 bool HelloWorld::is_proper_place(int row, int col) {
@@ -458,3 +563,513 @@ char HelloWorld::get_rand_img_alphabet() {
   int r = (std::rand() % 26) + alphabet::a;
   return static_cast<char>(r);
 }
+
+char HelloWorld::get_img_alphabet(int index) {
+  auto i = level_md::get().complete_sport_level;
+  return level_md::get().get_sports()[i].keys[index];
+}
+
+bool HelloWorld::check_complete_game() {
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+      auto block_ptr = blocks[i][j];
+      if(block_ptr != nullptr) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+bool HelloWorld::check_end_game() {
+
+  for(auto& word : words_) {
+    if(check_possible_word2(word)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool HelloWorld::check_possible_word2(std::string word) {
+
+  std::vector<std::tuple<int, int>> indexs;
+  const char key = word[0];
+  
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+      if(blocks[i][j]) {
+        if(blocks[i][j]->key == key) {
+          indexs.push_back(std::tuple<int, int>(i, j));
+        }
+      }
+    }
+  }
+
+  CCLOG("*******************************************************");
+
+  for(auto& index : indexs) {
+    path.clear();
+    CCLOG("찾을 단어: %s", word.c_str());
+    CCLOG("시작 위치: %d, %d", std::get<0>(index), std::get<1>(index));
+    auto r = find_word(index, 0, word);
+    if(r == 100) {
+      CCLOG("(O) 단어 찾음: %s", word.c_str());
+      return true;
+    } else {
+      CCLOG("(X) 단어 못찾음: %s", word.c_str());
+    }
+  }
+  
+  return false;
+}
+
+int HelloWorld::find_word(std::tuple<int, int> index, int depth, const std::string& word) {
+
+  if(depth == word.size()-1) {
+
+    for(auto& i : path) {
+      auto row = std::get<0>(i);
+      auto col = std::get<1>(i);
+      CCLOG("%c", blocks[row][col]->key);
+    }
+
+    return 100; // found
+  }
+
+  int row = std::get<0>(index);
+  int col = std::get<1>(index);
+  
+  CCLOG("현재 key: %c", word[depth]);
+  //CCLOG("다음 key: %c", word[depth+1]);
+
+  auto next_key = word[depth+1];
+  CCLOG("찾아야할 key: %c", word[depth+1]);
+  //8 way search
+  if(go_top_left(index, next_key)) {
+    CCLOG("왼쪽위 진행");
+    //CCLOG("왼쪽위 키값: %c", blocks[row-1][col-1]->key);
+    auto r = find_word(std::tuple<int, int>(row-1, col-1), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+    
+    path.pop_back();
+  }
+
+  if(go_top(index, next_key)) {
+    CCLOG("위 진행");
+    auto r = find_word(std::tuple<int, int>(row-1, col), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+
+    path.pop_back();
+  } 
+
+  if(go_top_right(index, next_key)) {
+    CCLOG("오른쪽위 진행");
+    auto r = find_word(std::tuple<int, int>(row-1, col+1), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+
+    path.pop_back();
+  }
+
+  if(go_right(index, next_key)) {
+    CCLOG("오른쪽 진행");
+    auto r = find_word(std::tuple<int, int>(row, col+1), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+
+    path.pop_back();
+  }
+
+  if(go_bottom_right(index, next_key)) {
+    CCLOG("오른쪽 아래 진행");
+    auto r = find_word(std::tuple<int, int>(row+1, col+1), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+
+    path.pop_back();
+  }
+
+  if(go_bottom(index, next_key)) {
+    CCLOG("아래 진행");
+    auto r = find_word(std::tuple<int, int>(row+1, col), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+
+    path.pop_back();
+  }
+
+  if(go_bottom_left(index, next_key)) {
+    CCLOG("왼쪽 아래 진행");
+    auto r = find_word(std::tuple<int, int>(row+1, col-1), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+
+    path.pop_back();
+  }
+
+  if(go_left(index, next_key)) {
+    CCLOG("왼쪽 진행");
+    auto r = find_word(std::tuple<int, int>(row, col-1), depth+1, word);
+    if(r == 100) {
+      return 100;
+    }
+
+    path.pop_back();
+  }
+
+
+  return -1;
+}
+
+bool HelloWorld::is_path(std::tuple<int, int> index) {
+  for(auto& tmp : path) {
+    if(tmp == index) {
+      CCLOG("지나온 위치: %d, %d", std::get<0>(index), std::get<1>(index));
+      return true;
+    }
+  }
+  return false;
+}
+
+bool HelloWorld::go_top_left(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+
+  if(row - 1 < 0 || col -1 < 0) {
+    return false;
+  } 
+
+  if(blocks[row-1][col-1] == nullptr) {
+    return false;
+  }
+
+  if(blocks[row-1][col-1]->key != key) {
+    return false;
+  }
+
+  auto tmp = std::tuple<int, int>(row-1, col-1);
+
+  if(is_path(tmp)) {
+    return false;
+  }
+
+  path.push_back(tmp);
+
+  return true; 
+}
+
+bool HelloWorld::go_top(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+  if(row - 1 < 0) {
+    return false;
+  }
+
+  if(blocks[row-1][col] == nullptr) {
+    return false;
+  }
+
+  if(blocks[row-1][col]->key != key) {
+    return false;
+  }
+
+  auto tmp = std::tuple<int, int>(row-1, col);
+  if(is_path(tmp)) {
+    return false;
+  }
+
+  path.push_back(tmp);
+ 
+  return true;
+}
+
+bool HelloWorld::go_top_right(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+
+  if(row - 1 < 0 || col + 1 >= col_) {
+    return false;
+  }
+
+  if(blocks[row-1][col+1] == nullptr) {
+    return false;
+  }
+
+  if(blocks[row-1][col+1]->key != key) {
+    return false;
+  }
+
+  auto tmp = std::tuple<int, int>(row-1, col+1);
+  if(is_path(tmp)) {
+    return false;
+  }
+
+  path.push_back(tmp);
+
+  return true;
+}
+
+bool HelloWorld::go_right(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+
+  if(col + 1 >= col_) {
+    return false;
+  }
+
+  if(blocks[row][col+1] == nullptr) {
+    return false;
+  }
+
+  if(blocks[row][col+1]->key != key) {
+    return false;
+  }
+
+  auto tmp = std::tuple<int, int>(row, col+1);
+  if(is_path(tmp)) {
+    return false;
+  }
+
+  path.push_back(tmp);
+
+  return true;
+}
+
+bool HelloWorld::go_bottom_right(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+
+  if(row + 1 >= row_ || col + 1 >= col_) {
+    return false;
+  }
+
+  if(blocks[row+1][col+1] == nullptr) {
+    return false;
+  }
+
+  if(blocks[row+1][col+1]->key != key) {
+    return false;
+  }
+
+  auto tmp = std::tuple<int, int>(row+1, col+1);
+  if(is_path(tmp)) {
+    return false;
+  }
+
+  path.push_back(tmp);
+
+  return true;
+}
+
+bool HelloWorld::go_bottom(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+
+  if(row + 1 >= row_) {
+    return false;
+  }
+
+  if(blocks[row+1][col] == nullptr) {
+    return false;
+  }
+
+  if(blocks[row+1][col]->key != key) {
+    return false;
+  }
+
+  auto tmp = std::tuple<int, int>(row+1, col);
+  if(is_path(tmp)) {
+    return false;
+  }
+
+  path.push_back(tmp);
+
+  return true;
+}
+
+bool HelloWorld::go_bottom_left(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+
+  if(row + 1 >= row_ || col - 1 < 0) {
+    return false;
+  }
+
+  if(blocks[row+1][col-1] == nullptr) {
+    return false;
+  }
+  
+  if(blocks[row+1][col-1]->key != key) {
+    return false;
+  }
+
+ auto tmp = std::tuple<int, int>(row+1, col-1);
+  if(is_path(tmp)) {
+    return false;
+  }
+
+ path.push_back(tmp);
+
+  return true;
+}
+
+bool HelloWorld::go_left(std::tuple<int, int> index, char key) {
+  auto row = std::get<0>(index);
+  auto col = std::get<1>(index);
+
+  if(col - 1 < 0) {
+    return false;
+  }
+
+  if(blocks[row][col-1] == nullptr) {
+    return false;
+  }
+
+  if(blocks[row][col-1]->key != key) {
+    return false;
+  }
+
+  auto tmp = std::tuple<int, int>(row, col-1);
+  if(is_path(tmp)) {
+    return false;
+  }
+
+  path.push_back(tmp);
+
+  return true;
+}
+
+bool HelloWorld::is_key_next(int row, int col, char next_key) {
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+      if(blocks[i][j] != nullptr) {
+        if(blocks[i][j]->key == next_key) {
+          if(check_possible_move(std::make_tuple(row, col), std::make_tuple(i, j))) return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+std::vector<std::tuple<int, int>> HelloWorld::get_keys(const char c) {
+
+  std::vector<std::tuple<int, int>> v;
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+      if(blocks[i][j] != nullptr) {
+        if(blocks[i][j]->key == c) {
+          v.push_back(std::make_tuple(i, j));
+        }
+      }
+    }
+  }
+  return v;
+}
+
+/*
+std::vector<std::tuple<int, int>> HelloWorld::find_next_index(char key) {
+  std::vector<std::tuple<int, int>> v;
+
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+      auto block_ptr = blocks[i][j];
+      if(block_ptr != nullptr) {
+        if(block_ptr->key == key) {
+          v.push_back(std::make_tuple(i, j));
+        }
+      }
+    }
+  }
+  return v;
+}
+*/
+
+bool HelloWorld::check_possible_move(std::tuple<int, int> index0, std::tuple<int, int> index1) {                         
+                               
+  if(std::abs(std::get<0>(index0) - std::get<0>(index1)) > 1 || 
+     std::abs(std::get<1>(index0) - std::get<1>(index1)) > 1) {
+    return false;
+  }
+
+  return true;
+}
+
+int HelloWorld::get_index(int row, int col) {
+  return (row * row_) + col;
+}
+
+void HelloWorld::action_incorrect() {
+  CCLOG("색 다시 밝게해주는 작업");
+  auto audio = SimpleAudioEngine::getInstance();
+  audio->playEffect("sound/oh_no.wav", false, 1.0f, 1.0f, 1.0f);
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+      end_touched_action(i, j);
+    }
+  }
+}
+
+void HelloWorld::replace_level_scene() {
+   auto s = HelloWorld::createScene();
+  Director::getInstance()->replaceScene(s); 
+}
+
+/*
+bool HelloWorld::check_possible_word(std::string word) {
+  
+  // static assert
+  if(word.size() <= 1) {
+    CCLOG("단어 사이즈가 이상함");
+    return false;
+  }
+
+  std::tuple<int, int> last_index = std::make_tuple(-1, -1);
+
+  for(auto i=0; i<word.size()-1; i++) {
+    std::vector<std::tuple<int, int>> tmp = get_keys(word[i]);
+
+    const char next_key = word[i+1];
+
+    bool is_possible = false;
+    for(auto j=0; j<tmp.size(); j++) {
+      if(is_key_next(std::get<0>(tmp[j]), std::get<1>(tmp[j]), next_key)) {
+        CCLOG("@curr key: %c", word[i]);
+        CCLOG("@next key: %c", word[i+1]);
+        
+        if(std::get<0>(last_index) == -1 && std::get<1>(last_index) == -1) {
+          is_possible = true;
+          CCLOG("계속 진행할수 있음");
+        } else {
+          if(check_possible_move(last_index, tmp[j])) {
+            is_possible = true;
+            CCLOG("계속 진행할수 있음");
+          } else {
+            CCLOG("한번젼으로 갈수가 없어서 진행할수 없음");
+          }
+        }
+
+        // row, col 기준으로 전에 키가 존재해야함 무조건!
+        last_index = tmp[j];
+      }
+    }
+
+    if(!is_possible) {
+      CCLOG("계속 진행할수 없음");
+      return false;
+    }
+  }
+
+  return true;
+}
+*/
