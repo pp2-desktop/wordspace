@@ -1,0 +1,83 @@
+{
+  "levels": [
+
+         { 
+            "move": 50,
+            "row": 3,
+            "col": 3,
+            "words" : ["BOW", "GYM", "BAT"],
+            "keys": ["W", "M", "B", "A", "O", "Y", "T", "B", "G"]
+          },
+          { 
+            "move": 5,
+            "row": 3,
+            "col": 3,
+            "words" : ["SKI", "CUE", "MAT"],
+            "keys": ["I","A", "M", "E", "K", "C", "S", "U", "T"]
+          },
+          { 
+            "move": 5,
+            "row": 3,
+            "col": 3,
+            "words" : ["TAG", "TIE", "WIN"],
+            "keys": ["G","I", "W", "A", "E", "I", "N", "T", "T"]
+          },
+          { 
+            "move": 5,
+            "row": 3,
+            "col": 3,
+            "words" : ["RUN", "JOG", "OUT"],
+            "keys": ["T","O", "R", "G", "U", "O", "N", "U", "J"]
+          },
+          { 
+            "move": 6,
+            "row": 4,
+            "col": 4,
+            "words" : ["SWIM", "BIKE", "RINK", "PUCK"],
+            "keys": ["M", "I", "U", "K", "W", "N", "C", "P", "S", "K", "I", "R", "K", "E", "I", "B"]
+          },
+          { 
+            "move": 6,
+            "row": 4,
+            "col": 4,
+            "words" : ["JUMP", "HOME", "HOOP", "TEAM"],
+            "keys": ["E", "E", "M", "P", "T", "O", "M", "M", "H", "O", "O", "U", "H", "A", "J", "P"]
+          },
+          { 
+            "move": 6,
+            "row": 4,
+            "col": 4,
+            "words" : ["POLE", "DIVE", "LUTZ", "PLAY"],
+            "keys": ["Z", "V", "E", "Y", "I", "T", "A", "L", "D", "E", "U", "O", "P", "L", "L", "P"]
+          },
+          { 
+            "move": 8,
+            "row": 5,
+            "col": 5,
+            "words" : ["SHOOT", "SKATE", "POOL", "ARCHER", "PITCH"],
+            "keys": ["E", "C", "H", "O", "O", "T", "T", "A", "H", "T", "I", "P", "C", "K", "S", "R", "H", "O", "R", "S", "E", "O", "P", "L", "A"]
+          },
+          { 
+            "move": 8,
+            "row": 5,
+            "col": 5,
+            "words" : ["GOLF", "RACE", "OFFENSE", "BASKETBALL"],
+            "keys": ["F", "A", "O", "C", "E", "L", "L", "B", "G", "A", "L", "T", "K", "S", "R", "F", "O", "E", "S", "A", "F", "E", "N", "B", "E"]
+          },
+          { 
+            "move": 11,
+            "row": 6,
+            "col": 6,
+            "words" : ["HUDDLE", "HOCKEY", "CLUP", "BUNT", "COACH", "INNING", "FIELD"],
+            "keys": ["G", "N", "D", "E", "U", "T", "I", "E", "L", "B", "I", "N", "L", "N", "N", "I", "C", "F", "Y", "D", "D", "A", "O", "H", "U", "E", "K", "U", "O", "C", "P", "L", "C", "C", "H", "H"]
+          },
+          { 
+            "move": 15,
+            "row": 7,
+            "col": 7,
+            "words" : ["FITNESS", "SKATE", "BICYCLE", "CATCH", "TENNIS", "SOCCER", "NET", "STICK", "PUNCH"],
+            "keys": ["E", "L", "T", "N", "S", "T", "E", "N", "I", "C", "I", "E", "S", "A", "N", "S", "T", "Y", "F", "B", "K", "R", "E", "E", "C", "I", "S", "H", "T", "E", "N", "C", "C", "A", "C", "T", "C", "C", "C", "O", "U", "T", "I", "S", "K", "H", "N", "S", "P"]
+          }
+
+            ]
+}

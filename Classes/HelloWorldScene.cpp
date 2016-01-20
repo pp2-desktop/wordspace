@@ -209,6 +209,21 @@ bool HelloWorld::init()
         }
 
 	CCLOG("x: %f, y: %f", sprite->getPosition().x, sprite->getPosition().y);
+
+        
+        // 블럭 단어 추가
+        std::string tmp = "A";
+        auto label = Label::createWithTTF(tmp.c_str(), "fonts/nanumb.ttf", 35);
+        label->setAnchorPoint(Vec2(0.5f, 0.5f));
+        auto front_size = sprite->getContentSize();
+        label->setPosition(Vec2(
+                              front_size.width/2.0f,
+                              front_size.height/2.0f
+                              ));
+        label->setTextColor(Color4B::RED);
+        sprite->addChild(label);
+        
+
         // physics 
         auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size), PhysicsMaterial(1.0f, 0.0f, 0.0f));
 
@@ -229,7 +244,7 @@ bool HelloWorld::init()
 
         block_info_ptr->pos = sprite->getPosition();
         block_info_ptr->sprite = sprite;
-        block_info_ptr->physcis = physicsBody;
+        //block_info_ptr->physcis = physicsBody;
         block_info_ptr->key = key;
 
         blocks[i][j] = block_info_ptr;

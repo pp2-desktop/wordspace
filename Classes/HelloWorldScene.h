@@ -10,7 +10,8 @@ using namespace cocos2d::ui;
 struct block_info {
   Vec2 pos;
   Sprite* sprite;
-  PhysicsBody* physcis;
+  Label* label;
+  //PhysicsBody* physcis;
   char key;
 };
 typedef block_info* block_info_ptr;

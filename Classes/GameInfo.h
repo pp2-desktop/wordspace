@@ -12,6 +12,7 @@ struct level {
   int col;
   std::vector<std::string> words;
   std::vector<char> keys;
+  //std::vector<std::string> keys;
 };
 
 class level_md {
