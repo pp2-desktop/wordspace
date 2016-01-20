@@ -63,7 +63,7 @@ void SingleLobbyScene::update(float dt) {
 }
 
 void SingleLobbyScene::read_theme_json() {
-  std::string fileName = CCFileUtils::sharedFileUtils()->fullPathForFilename("config/en/sports_theme.json");
+  std::string fileName = CCFileUtils::sharedFileUtils()->fullPathForFilename("config/ko/sports_theme.json");
   //auto bufferSize = 0; // android
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_ANDROID)
   auto bufferSize = 0; 
@@ -96,8 +96,11 @@ void SingleLobbyScene::parsing_level_json(std::string read_data) {
       }
 
       for(auto& key: parsed_lv["keys"].array_items()) {
-        lv.keys.push_back(key.string_value()[0]);
-        //lv.keys.push_back(key.string_value());
+        //lv.keys.push_back(key.string_value()[0]);
+
+        // 쭉 배열되어있는 키값들을 1개씩 넣기
+        //CCLOG("사이즈: %d", key.string_value().size());
+        lv.keys.push_back(key.string_value());
       }
 
       level_md::get().get_sports().push_back(lv);

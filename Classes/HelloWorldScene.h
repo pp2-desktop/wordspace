@@ -12,7 +12,7 @@ struct block_info {
   Sprite* sprite;
   Label* label;
   //PhysicsBody* physcis;
-  char key;
+  std::string key;
 };
 typedef block_info* block_info_ptr;
 
@@ -53,13 +53,6 @@ public:
     int get_col_by_index(int index);
     void replace_blocks(int row, int col);
 
-    int row_;
-    int col_;
-    int move_;
-    std::vector<std::string> words_;
-    std::vector<std::string> complete_words_;
-    std::vector<char> keys_;
-
     //std::vector<std::tuple<int, int>> touched_blocks_;
     std::map<int, std::tuple<int, int>> touched_blocks_;
     std::deque<std::tuple<int, int>> ordered_touched_blocks_;
@@ -68,8 +61,8 @@ public:
     void end_touched_action(int row, int col);
     bool is_proper_place(int row, int col);
     bool is_touched;
-    char get_rand_img_alphabet();
-    char get_img_alphabet(int index);
+
+    std::string get_img_alphabet(int index);
     int get_index(int row, int col);
     void action_incorrect();
     void replace_level_scene();
@@ -79,9 +72,9 @@ public:
     //std::vector<std::tuple<int, int>> find_next_index(char key);
     bool check_incomplete(std::vector<std::vector<std::tuple<int, int>>>& route_word);
     bool check_possible_word2(std::string word);
-    int find_index(const char c);
-    std::vector<std::tuple<int, int>> get_keys(const char c);
-    bool is_key_next(int row, int col, char next_key);
+    int find_index(const std::string c);
+    std::vector<std::tuple<int, int>> get_keys(const std::string c);
+    bool is_key_next(int row, int col, std::string next_key);
     
     bool check_possible_move(std::tuple<int, int> index0, std::tuple<int, int> index1);
 
@@ -93,14 +86,14 @@ public:
 
     int find_word(std::tuple<int, int> index, int depth, const std::string& word);
     bool is_path(std::tuple<int, int> index);
-    bool go_top_left(std::tuple<int, int> index, char key);
-    bool go_top(std::tuple<int, int> index, char key);
-    bool go_top_right(std::tuple<int, int> index, char key);
-    bool go_right(std::tuple<int, int> index, char key);
-    bool go_bottom_right(std::tuple<int, int> index, char key);
-    bool go_bottom(std::tuple<int, int> index, char key);
-    bool go_bottom_left(std::tuple<int, int> index, char key);
-    bool go_left(std::tuple<int, int> index, char key);
+    bool go_top_left(std::tuple<int, int> index, std::string key);
+    bool go_top(std::tuple<int, int> index, std::string key);
+    bool go_top_right(std::tuple<int, int> index, std::string key);
+    bool go_right(std::tuple<int, int> index, std::string key);
+    bool go_bottom_right(std::tuple<int, int> index, std::string key);
+    bool go_bottom(std::tuple<int, int> index, std::string key);
+    bool go_bottom_left(std::tuple<int, int> index, std::string key);
+    bool go_left(std::tuple<int, int> index, std::string key);
 
     std::deque<std::tuple<int, int>> path;
 
@@ -108,6 +101,15 @@ public:
     CREATE_FUNC(HelloWorld);
 
     void clean_up();
+
+    int char_size;
+    int row_;
+    int col_;
+    int move_;
+    std::vector<std::string> words_;
+    std::vector<std::string> complete_words_;
+    std::vector<std::string> keys_;
+
 };
 
 #endif // __HELLOWORLD_SCENE_H__

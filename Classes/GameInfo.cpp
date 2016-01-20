@@ -17,6 +17,7 @@ level::~level() {
 
 level_md::level_md() {
   complete_sport_level = 0;
+
 }
 
 level_md::~level_md() {

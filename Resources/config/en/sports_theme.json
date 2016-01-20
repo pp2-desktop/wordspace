@@ -2,7 +2,7 @@
   "levels": [
 
          { 
-            "move": 50,
+            "move": 5,
             "row": 3,
             "col": 3,
             "words" : ["BOW", "GYM", "BAT"],

@@ -11,7 +11,7 @@ struct level {
   int row;
   int col;
   std::vector<std::string> words;
-  std::vector<char> keys;
+  std::vector<std::string> keys;
   //std::vector<std::string> keys;
 };
 
@@ -30,4 +30,5 @@ class level_md {
 
   std::vector<level>& get_sports() { return sports_; }
   int complete_sport_level;
+  int char_size;
 };

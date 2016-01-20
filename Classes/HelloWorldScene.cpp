@@ -142,7 +142,8 @@ bool HelloWorld::init()
     auto i = level_md::get().complete_sport_level;
     move_ = lvs[i].move;
     words_ = lvs[i].words;
-    //keys_ = lvs[i].keys;
+    keys_ = lvs[i].keys;
+
     row_ = lvs[i].row;
     col_ = row_;
 
@@ -168,7 +169,7 @@ bool HelloWorld::init()
     //LOG("each side block cnt: %f", block_size);
 
     auto last_y = visibleSize.height - 100.0f;
-    auto tag = 0;
+    //auto tag = 0;
     CCLOG("--------------------------------------------------------------");
     for(auto i=0; i<col_; i++) {
       auto last_x = margin;
@@ -181,10 +182,10 @@ bool HelloWorld::init()
         last_x = x + block_margin + block_size/2;
 
         //char key = get_rand_img_alphabet();
-        char key = get_img_alphabet(get_index(i,j));
-        CCLOG("%c", key);
-        std::string img_path = "aaa/" + std::string(&key, 1) + std::string(".png");
-        auto sprite = Sprite::create(img_path);
+        std::string key = get_img_alphabet(get_index(i,j));
+        //CCLOG("%c", key);
+        //std::string img_path = "aaa/" + std::string(&key, 1) + std::string(".png");
+        auto sprite = Sprite::create("aaa/block.png");
 
         sprite->setPosition(Vec2(x, last_y));
 
@@ -212,7 +213,7 @@ bool HelloWorld::init()
 
         
         // 블럭 단어 추가
-        std::string tmp = "A";
+        std::string tmp = key;
         auto label = Label::createWithTTF(tmp.c_str(), "fonts/nanumb.ttf", 35);
         label->setAnchorPoint(Vec2(0.5f, 0.5f));
         auto front_size = sprite->getContentSize();
@@ -228,10 +229,9 @@ bool HelloWorld::init()
         auto physicsBody = PhysicsBody::createBox(Size(block_size, block_size), PhysicsMaterial(1.0f, 0.0f, 0.0f));
 
         physicsBody->setGravityEnable(true);
-        
 	physicsBody->setDynamic(true);
         physicsBody->setRotationEnable(false);
-        //physicsBody->setMass(1000.0f);
+        physicsBody->setMass(1000.0f);
         //physicsBody->setAngularDamping(0);
         //physicsBody->setLinearDamping(0.0f);
         //physicsBody->setVelocity(Vec2(0.0f, -400.0f));
@@ -378,7 +378,8 @@ void HelloWorld::onTouchEnded(Touch* touch, Event* unused_event) {
     auto i = std::get<0>(it);
     auto j = std::get<1>(it);
     auto block = blocks[i][j];
-    touched_word.push_back(block->key);
+    //touched_word.push_back(block->key);
+    touched_word += block->key;
   }
 
   //CCLOG("%s", touched_word.c_str());
@@ -496,7 +497,7 @@ int HelloWorld::get_col_by_index(int index) {
 void HelloWorld::replace_blocks(int row, int col) {
   
   if(row == 0) {
-    auto block_ptr = blocks[0][col];
+    //auto block_ptr = blocks[0][col];
     blocks[0][col] = nullptr;
     return;
   }
@@ -565,21 +566,7 @@ bool HelloWorld::is_proper_place(int row, int col) {
   return true;
 }
 
-char HelloWorld::get_rand_img_alphabet() {
-  CCLOG("rand_img_aphabet");
-
-  struct timespec ts;
-  clock_gettime(CLOCK_MONOTONIC, &ts);
-
-    /* using nano-seconds instead of seconds */
-  std::srand((time_t)ts.tv_nsec);
-
-  //std::srand(std::time(0));
-  int r = (std::rand() % 26) + alphabet::a;
-  return static_cast<char>(r);
-}
-
-char HelloWorld::get_img_alphabet(int index) {
+std::string HelloWorld::get_img_alphabet(int index) {
   auto i = level_md::get().complete_sport_level;
   return level_md::get().get_sports()[i].keys[index];
 }
@@ -609,7 +596,13 @@ bool HelloWorld::check_end_game() {
 bool HelloWorld::check_possible_word2(std::string word) {
 
   std::vector<std::tuple<int, int>> indexs;
-  const char key = word[0];
+
+  auto size = keys_[0].size();
+  char_size = size;
+
+  const std::string key = word.substr(0, size);
+
+  CCLOG("begin key: %s", key.c_str());
   
   for(auto i=0; i<row_; i++) {
     for(auto j=0; j<col_; j++) {
@@ -641,12 +634,11 @@ bool HelloWorld::check_possible_word2(std::string word) {
 
 int HelloWorld::find_word(std::tuple<int, int> index, int depth, const std::string& word) {
 
-  if(depth == word.size()-1) {
+  if((depth+1)*char_size == word.size()) {
 
     for(auto& i : path) {
       auto row = std::get<0>(i);
       auto col = std::get<1>(i);
-      CCLOG("%c", blocks[row][col]->key);
     }
 
     return 100; // found
@@ -655,11 +647,15 @@ int HelloWorld::find_word(std::tuple<int, int> index, int depth, const std::stri
   int row = std::get<0>(index);
   int col = std::get<1>(index);
   
-  CCLOG("현재 key: %c", word[depth]);
-  //CCLOG("다음 key: %c", word[depth+1]);
+  
 
-  auto next_key = word[depth+1];
-  CCLOG("찾아야할 key: %c", word[depth+1]);
+  //auto next_key = word[depth+1];
+
+  auto start = (depth+1) * char_size;
+
+  auto next_key = word.substr(start, char_size);
+
+  CCLOG("next key: %s", next_key.c_str());
   //8 way search
   if(go_top_left(index, next_key)) {
     CCLOG("왼쪽위 진행");
@@ -756,7 +752,7 @@ bool HelloWorld::is_path(std::tuple<int, int> index) {
   return false;
 }
 
-bool HelloWorld::go_top_left(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_top_left(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
 
@@ -783,7 +779,7 @@ bool HelloWorld::go_top_left(std::tuple<int, int> index, char key) {
   return true; 
 }
 
-bool HelloWorld::go_top(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_top(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
   if(row - 1 < 0) {
@@ -808,7 +804,7 @@ bool HelloWorld::go_top(std::tuple<int, int> index, char key) {
   return true;
 }
 
-bool HelloWorld::go_top_right(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_top_right(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
 
@@ -834,7 +830,7 @@ bool HelloWorld::go_top_right(std::tuple<int, int> index, char key) {
   return true;
 }
 
-bool HelloWorld::go_right(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_right(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
 
@@ -860,7 +856,7 @@ bool HelloWorld::go_right(std::tuple<int, int> index, char key) {
   return true;
 }
 
-bool HelloWorld::go_bottom_right(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_bottom_right(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
 
@@ -886,7 +882,7 @@ bool HelloWorld::go_bottom_right(std::tuple<int, int> index, char key) {
   return true;
 }
 
-bool HelloWorld::go_bottom(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_bottom(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
 
@@ -912,7 +908,7 @@ bool HelloWorld::go_bottom(std::tuple<int, int> index, char key) {
   return true;
 }
 
-bool HelloWorld::go_bottom_left(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_bottom_left(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
 
@@ -938,7 +934,7 @@ bool HelloWorld::go_bottom_left(std::tuple<int, int> index, char key) {
   return true;
 }
 
-bool HelloWorld::go_left(std::tuple<int, int> index, char key) {
+bool HelloWorld::go_left(std::tuple<int, int> index, std::string key) {
   auto row = std::get<0>(index);
   auto col = std::get<1>(index);
 
@@ -964,7 +960,7 @@ bool HelloWorld::go_left(std::tuple<int, int> index, char key) {
   return true;
 }
 
-bool HelloWorld::is_key_next(int row, int col, char next_key) {
+bool HelloWorld::is_key_next(int row, int col, std::string next_key) {
   for(auto i=0; i<row_; i++) {
     for(auto j=0; j<col_; j++) {
       if(blocks[i][j] != nullptr) {
@@ -977,7 +973,7 @@ bool HelloWorld::is_key_next(int row, int col, char next_key) {
   return false;
 }
 
-std::vector<std::tuple<int, int>> HelloWorld::get_keys(const char c) {
+std::vector<std::tuple<int, int>> HelloWorld::get_keys(const std::string c) {
 
   std::vector<std::tuple<int, int>> v;
   for(auto i=0; i<row_; i++) {
