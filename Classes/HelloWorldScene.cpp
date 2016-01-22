@@ -116,7 +116,6 @@ bool HelloWorld::init()
     // create and initialize a label
     
     auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 24);
-    
     // position the label on the center of the screen
     label->setPosition(Vec2(origin.x + visibleSize.width/2,
                             origin.y + visibleSize.height - label->getContentSize().height));
@@ -143,6 +142,8 @@ bool HelloWorld::init()
     move_ = lvs[i].move;
     words_ = lvs[i].words;
     keys_ = lvs[i].keys;
+
+    char_size = keys_[0].size();
 
     row_ = lvs[i].row;
     col_ = row_;
@@ -214,8 +215,9 @@ bool HelloWorld::init()
         
         // 블럭 단어 추가
         std::string tmp = key;
-        auto label = Label::createWithTTF(tmp.c_str(), "fonts/nanumb.ttf", 35);
+        auto label = Label::createWithTTF(tmp.c_str(), "fonts/nanumb.ttf", 25);
         label->setAnchorPoint(Vec2(0.5f, 0.5f));
+        label->setScale(scale_factor);
         auto front_size = sprite->getContentSize();
         label->setPosition(Vec2(
                               front_size.width/2.0f,
@@ -231,7 +233,7 @@ bool HelloWorld::init()
         physicsBody->setGravityEnable(true);
 	physicsBody->setDynamic(true);
         physicsBody->setRotationEnable(false);
-        physicsBody->setMass(1000.0f);
+        //physicsBody->setMass(1000.0f);
         //physicsBody->setAngularDamping(0);
         //physicsBody->setLinearDamping(0.0f);
         //physicsBody->setVelocity(Vec2(0.0f, -400.0f));
@@ -244,7 +246,8 @@ bool HelloWorld::init()
 
         block_info_ptr->pos = sprite->getPosition();
         block_info_ptr->sprite = sprite;
-        //block_info_ptr->physcis = physicsBody;
+        block_info_ptr->label = label;
+        block_info_ptr->physics = physicsBody;
         block_info_ptr->key = key;
 
         blocks[i][j] = block_info_ptr;
@@ -458,6 +461,13 @@ void HelloWorld::onTouchEnded(Touch* touch, Event* unused_event) {
 
   }
 
+  if(move_ < 1) {
+    clean_up();
+    auto audio = SimpleAudioEngine::getInstance();
+    audio->playEffect("sound/YouFailed.wav", false, 1.0f, 1.0f, 1.0f);
+    this->scheduleOnce(SEL_SCHEDULE(&HelloWorld::replace_level_scene), 0.0f);
+  }
+
    is_touched = false;
    CCLOG("터치 종료");
   
@@ -539,6 +549,7 @@ void HelloWorld::start_touched_action(int row, int col) {
   auto block = blocks[row][col];
   auto tintTo = TintTo::create(0.0f, 124.0f, 124.0f, 0.0f);
   block->sprite->runAction(tintTo);
+  block->label->setTextColor(Color4B::WHITE);
 }
 
 void HelloWorld::end_touched_action(int row, int col) {
@@ -546,6 +557,7 @@ void HelloWorld::end_touched_action(int row, int col) {
   if(block != nullptr) {
     auto tintTo = TintTo::create(0.0f, 255.0f, 255.0f, 255.0f);
     block->sprite->runAction(tintTo);
+    block->label->setTextColor(Color4B::RED);
   }
 }
 
@@ -597,10 +609,7 @@ bool HelloWorld::check_possible_word2(std::string word) {
 
   std::vector<std::tuple<int, int>> indexs;
 
-  auto size = keys_[0].size();
-  char_size = size;
-
-  const std::string key = word.substr(0, size);
+  const std::string key = word.substr(0, char_size);
 
   CCLOG("begin key: %s", key.c_str());
   
@@ -634,12 +643,14 @@ bool HelloWorld::check_possible_word2(std::string word) {
 
 int HelloWorld::find_word(std::tuple<int, int> index, int depth, const std::string& word) {
 
-  if((depth+1)*char_size == word.size()) {
+  if((depth+1)*char_size == static_cast<int>(word.size())) {
 
+    /*
     for(auto& i : path) {
       auto row = std::get<0>(i);
       auto col = std::get<1>(i);
     }
+    */
 
     return 100; // found
   }
@@ -652,7 +663,6 @@ int HelloWorld::find_word(std::tuple<int, int> index, int depth, const std::stri
   //auto next_key = word[depth+1];
 
   auto start = (depth+1) * char_size;
-
   auto next_key = word.substr(start, char_size);
 
   CCLOG("next key: %s", next_key.c_str());
@@ -1036,51 +1046,22 @@ void HelloWorld::replace_level_scene() {
   Director::getInstance()->replaceScene(s); 
 }
 
-/*
-bool HelloWorld::check_possible_word(std::string word) {
-  
-  // static assert
-  if(word.size() <= 1) {
-    CCLOG("단어 사이즈가 이상함");
-    return false;
-  }
-
-  std::tuple<int, int> last_index = std::make_tuple(-1, -1);
-
-  for(auto i=0; i<word.size()-1; i++) {
-    std::vector<std::tuple<int, int>> tmp = get_keys(word[i]);
-
-    const char next_key = word[i+1];
-
-    bool is_possible = false;
-    for(auto j=0; j<tmp.size(); j++) {
-      if(is_key_next(std::get<0>(tmp[j]), std::get<1>(tmp[j]), next_key)) {
-        CCLOG("@curr key: %c", word[i]);
-        CCLOG("@next key: %c", word[i+1]);
-        
-        if(std::get<0>(last_index) == -1 && std::get<1>(last_index) == -1) {
-          is_possible = true;
-          CCLOG("계속 진행할수 있음");
-        } else {
-          if(check_possible_move(last_index, tmp[j])) {
-            is_possible = true;
-            CCLOG("계속 진행할수 있음");
-          } else {
-            CCLOG("한번젼으로 갈수가 없어서 진행할수 없음");
-          }
-        }
-
-        // row, col 기준으로 전에 키가 존재해야함 무조건!
-        last_index = tmp[j];
+void HelloWorld::push_down_blocks() {
+  for(auto i=0; i<row_; i++) {
+    for(auto j=0; j<col_; j++) {
+      if(blocks[i][j] != nullptr) {
+        blocks[i][j]->physics->applyImpulse(Vec2(0.0f, -100.0f));
       }
     }
-
-    if(!is_possible) {
-      CCLOG("계속 진행할수 없음");
-      return false;
-    }
   }
-
-  return true;
 }
-*/
+
+block_info::block_info() {
+
+}
+
+block_info::~block_info() {
+  sprite = nullptr;
+  label = nullptr;
+  physics = nullptr;
+}

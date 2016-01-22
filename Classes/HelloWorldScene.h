@@ -8,10 +8,12 @@ USING_NS_CC;
 using namespace cocos2d::ui;
 
 struct block_info {
+  block_info();
+  ~block_info();
   Vec2 pos;
   Sprite* sprite;
   Label* label;
-  //PhysicsBody* physcis;
+  PhysicsBody* physics;
   std::string key;
 };
 typedef block_info* block_info_ptr;
@@ -78,6 +80,7 @@ public:
     
     bool check_possible_move(std::tuple<int, int> index0, std::tuple<int, int> index1);
 
+    void push_down_blocks();
 
     Button* restart_button;
 

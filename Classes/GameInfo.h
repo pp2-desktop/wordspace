@@ -30,5 +30,4 @@ class level_md {
 
   std::vector<level>& get_sports() { return sports_; }
   int complete_sport_level;
-  int char_size;
 };
