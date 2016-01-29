@@ -46,8 +46,9 @@ bool AppDelegate::applicationDidFinishLaunching() {
 #if (CC_TARGET_PLATFORM == CC_PLATFORM_WIN32) || (CC_TARGET_PLATFORM == CC_PLATFORM_MAC) || (CC_TARGET_PLATFORM == CC_PLATFORM_LINUX)
       //glview = GLViewImpl::createWithRect("wordspace", Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
 
-
-      glview = GLViewImpl::createWithRect("sh", Rect(0, 0, 768/2, 1024/2));
+      glview = GLViewImpl::createWithRect("wordspace", Rect(0, 0, designResolutionSize.width, designResolutionSize.height));
+      //glview = GLViewImpl::createWithRect("sh", Rect(0, 0, 768/2, 1024/2));
+      //glview = GLViewImpl::createWithRect("sh", Rect(0, 0, 1536/2, 2048/2));
 
 #else
         glview = GLViewImpl::create("wordspace");

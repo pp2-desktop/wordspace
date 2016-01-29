@@ -103,6 +103,17 @@ void SingleLobbyScene::parsing_level_json(std::string read_data) {
         lv.keys.push_back(key.string_value());
       }
 
+      for(auto& word_info: parsed_lv["word_infos"].array_items()) {
+        // word_infos = {"이어달리기": {"x":50, "y": 200}}
+        //auto word_info = word_info.object_items();
+        std::string word = word_info["word"].string_value();
+        auto x = static_cast<float>(word_info["x"].number_value());
+        auto y = static_cast<float>(word_info["y"].number_value());
+        auto font_size = word_info["font_size"].number_value();
+
+        lv.word_infos[word] = std::tuple<Vec2, int>(Vec2(x,y), font_size);
+      }
+
       level_md::get().get_sports().push_back(lv);
     }
   }

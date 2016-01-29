@@ -1,5 +1,7 @@
 #include <vector>
 #include <string>
+#include "cocos2d.h"
+USING_NS_CC;
 
 #define ccsf2(...) CCString::createWithFormat(__VA_ARGS__)->getCString()
 
@@ -12,6 +14,8 @@ struct level {
   int col;
   std::vector<std::string> words;
   std::vector<std::string> keys;
+
+  std::map<std::string, std::tuple<Vec2, int>> word_infos;
   //std::vector<std::string> keys;
 };
 

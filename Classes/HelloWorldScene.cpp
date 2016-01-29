@@ -80,6 +80,63 @@ bool HelloWorld::init()
     menu->setPosition(Vec2::ZERO);
     this->addChild(menu, 1);
 
+    auto bg = Sprite::create("img/theme1.png");
+    bg->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height/2 + origin.y));
+    bg->setScale(1.16f);
+    this->addChild(bg, 0);
+
+    auto top_ui = Sprite::create("ui/top.png");
+
+    CCLOG("content size width: %f, height: %f", top_ui->getContentSize().width, top_ui->getContentSize().height);
+
+    top_ui->setScale(1.16f);
+    auto height = ((top_ui->getContentSize().height / 2.0f) * 1.16f);
+    top_ui->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height - height));
+    this->addChild(top_ui, 0);
+
+    auto board_ui = Sprite::create("ui/board2.jpg");
+    //board_ui->setScaleX(1.7f);
+    //board_ui->setScaleY(1.5f);
+    auto extra_margin = 15.0f;
+    if(visibleSize.height < 1334.0f) {
+      extra_margin = 0.0f;
+      //extra_margin = -20.0f;
+    }
+
+    //auto board_content_height = board_ui->getContentSize().height * 1.5f;
+    auto board_content_height = board_ui->getContentSize().height ;
+
+    //height = (top_ui->getContentSize().height * 1.16f) + ((board_ui->getContentSize().height / 2.0f)*1.5f) + extra_margin;
+height = (top_ui->getContentSize().height * 1.16f) + ((board_ui->getContentSize().height / 2.0f)) + extra_margin;
+    board_ui->setPosition(Vec2(visibleSize.width/2 + origin.x, visibleSize.height - height));
+    this->addChild(board_ui, 0);    
+
+    /*
+    float board_center_y = visibleSize.height - height;
+    float board_top_y = visibleSize.height - height + ((board_ui->getContentSize().height / 2.0f) * 1.6f) -80.0f;
+
+    float first_x = 110.0f;
+    float second_x = visibleSize.width/2 + first_x - 50.f;
+
+    float word_margin = 5.0f;
+
+    auto word_start = first_x;
+    for(auto i=0; i<7; i++) {
+      auto ws = Sprite::create("ui/b.png");
+      ws->setPosition(Vec2(word_start, board_top_y));
+      word_start += (word_margin + ws->getContentSize().width);
+      this->addChild(ws, 0);
+    }
+
+    word_start = second_x;
+    for(auto i=0; i<7; i++) {
+      auto ws = Sprite::create("ui/b.png");
+      ws->setPosition(Vec2(word_start, board_top_y));
+      word_start += (word_margin + ws->getContentSize().width);
+      this->addChild(ws, 0);
+    }
+*/
+
     
     restart_button = ui::Button::create();
     restart_button->setContentSize(Size(231, 94));
@@ -118,7 +175,7 @@ bool HelloWorld::init()
     auto label = Label::createWithTTF("Hello World", "fonts/Marker Felt.ttf", 24);
     // position the label on the center of the screen
     label->setPosition(Vec2(origin.x + visibleSize.width/2,
-                            origin.y + visibleSize.height - label->getContentSize().height));
+                            origin.y + visibleSize.height - label->getContentSize().height ));
 
     // add the label as a child to this layer
     this->addChild(label, 1);
@@ -131,7 +188,6 @@ bool HelloWorld::init()
 
     // add the sprite as a child to this layer
     //this->addChild(sprite, 0);
-
     
     //std::srand(std::time(0)); // use current time as seed for random generator
     //row_ = (std::rand() % 6) + 2; // 2x2, 3x3, 4x4, 5x5;
@@ -142,8 +198,13 @@ bool HelloWorld::init()
     move_ = lvs[i].move;
     words_ = lvs[i].words;
     keys_ = lvs[i].keys;
-
+    word_infos_ = lvs[i].word_infos;
     char_size = keys_[0].size();
+
+    // 보드의 맨왼쪽 부분
+    auto board_origin = Vec2(board_ui->getPosition().x - board_ui->getContentSize().width/2.0f, board_ui->getPosition().y - board_ui->getContentSize().height/2.0f);
+
+    place_word_ui(board_origin);
 
     row_ = lvs[i].row;
     col_ = row_;
@@ -153,9 +214,17 @@ bool HelloWorld::init()
       *(blocks+i) = new block_info_ptr[col_];
     }
 
-    const float margin = 10.0f;
+    //CCLOG("visi height: %f", visibleSize.height);
+
+    float margin = 10.0f;
     const float block_margin = 0.0f;
     const float block_img_size = 100.0f;
+    float block_bottom_y = 50.0f;
+
+    if(visibleSize.height < 1334.0f) {
+      margin = 120.0f;
+      block_bottom_y = 10.0f;
+    }
 
 
     float width = 750 - (margin * 2.0f);
@@ -194,8 +263,7 @@ bool HelloWorld::init()
 
         if(scale_factor == 0.0f) {
 
-        }        
-        else if(scale_factor < 0.0f) {
+        } else if(scale_factor < 0.0f) {
           // 이미지보다 블럭이 더 큰 상황
           auto add_factor = std::abs(scale_factor) * 0.01f;
           scale_factor = 1.00 + add_factor; 
@@ -264,12 +332,10 @@ bool HelloWorld::init()
     //CLOG("last y position: %f", last_y);
 
     auto bottom = Sprite::create("bottom.png");
-    bottom->setPosition(Vec2(visibleSize.width/2.0f, 50.0f));
+    bottom->setPosition(Vec2(visibleSize.width/2.0f, block_bottom_y));
     auto physicsBody2 = PhysicsBody::createBox(Size(bottom->getContentSize().width, bottom->getContentSize().height), PhysicsMaterial(0.0f, 0.0f, 0.0f));
-
     physicsBody2->setDynamic(false);
     bottom->setPhysicsBody(physicsBody2);
-
     this->addChild(bottom, 0);
 
 
@@ -1046,15 +1112,42 @@ void HelloWorld::replace_level_scene() {
   Director::getInstance()->replaceScene(s); 
 }
 
-void HelloWorld::push_down_blocks() {
-  for(auto i=0; i<row_; i++) {
-    for(auto j=0; j<col_; j++) {
-      if(blocks[i][j] != nullptr) {
-        blocks[i][j]->physics->applyImpulse(Vec2(0.0f, -100.0f));
-      }
+void HelloWorld::place_word_ui(Vec2 board_origin) {
+  
+  for(auto& word_info : word_infos_) {
+    auto v = word_info.second;
+    
+
+    auto word = word_info.first;
+    auto tmp = std::string("");
+    for(auto i=0; i<word.size(); i++) {
+      CCLOG("AA");
+      CCLOG("%s", word[i]);
+      tmp = tmp + word[i] + "  ";
     }
+
+    auto label = Label::createWithTTF(tmp.c_str(), "fonts/nanumb.ttf", std::get<1>(v));
+    label->setAnchorPoint(ccp(0,0.5f)); 
+    label->setPosition(Vec2(board_origin.x + std::get<0>(v).x, board_origin.y + std::get<0>(v).y));
+    label->setTextColor(Color4B::RED);
+    this->addChild(label);
+
+    CCLOG("label 길이: %f", label->getContentSize().width);
+
+    /*
+    for(auto i=0; i< 5; i++) {
+      auto b = Sprite::create("ui/i.png");
+      b->setPosition(Vec2(board_origin.x + std::get<0>(v).x 
+                          + (std::get<1>(v)/2.0f) 
+                          + (i * (std::get<1>(v) + std::get<1>(v)/2.0f)),
+                          board_origin.y + std::get<0>(v).y));
+      this->addChild(b, 0);
+    }
+    */
   }
+
 }
+
 
 block_info::block_info() {
 

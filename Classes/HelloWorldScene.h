@@ -80,7 +80,9 @@ public:
     
     bool check_possible_move(std::tuple<int, int> index0, std::tuple<int, int> index1);
 
-    void push_down_blocks();
+    void place_word_ui(Vec2 board_origin);
+
+
 
     Button* restart_button;
 
@@ -112,6 +114,7 @@ public:
     std::vector<std::string> words_;
     std::vector<std::string> complete_words_;
     std::vector<std::string> keys_;
+    std::map<std::string, std::tuple<Vec2, int>> word_infos_;
 
 };
 
